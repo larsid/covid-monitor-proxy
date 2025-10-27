@@ -1,30 +1,28 @@
-FROM ubuntu:focal
+# Build React
+FROM node:18-bullseye-slim AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
 
-RUN apt-get update \
-    # Install dependencies
-    && apt-get install -y \
+# Runtime
+FROM node:18-bullseye-slim
+WORKDIR /app
+RUN apt-get update && apt-get install -y \
     net-tools \
     iputils-ping \
     iproute2 \
     curl \
     wget \
-    # Install NodeJS
-    && curl -fsSL https://deb.nodesource.com/setup_16.x | bash - \
-    && apt-get install -y nodejs \
-    # Install Application
-    && wget https://github.com/larsid/covid-monitor/archive/main.tar.gz \
-    && tar -xvzf main.tar.gz \
-    && cp -a covid-monitor-main/  app/ \
-    && rm -rf main.tar.gz \
-    && rm -rf covid-monitor-main \
-    && apt-get autoremove -y
+  && rm -rf /var/lib/apt/lists/*
 
+COPY --from=builder /app/build ./build
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/server.js ./
 
-WORKDIR /app
+RUN npm ci --only=production
 
-RUN npm install 
-
-EXPOSE 3000
-
-ENTRYPOINT [ "npm", "start" ]
+EXPOSE 80
+CMD ["node", "server.js"]
 

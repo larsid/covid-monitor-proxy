@@ -1,4 +1,4 @@
-# Covid Monitor with Proxy
+# Covid Monitor Proxy
 
 Covid Monitor is a React-based web application for tracking data related to the COVID-19 pandemic. This repository contains the user interface generated with Create React App and can be connected to real-time data collection and visualization services. This project was bootstrapped with  [Create React App](https://github.com/facebook/create-react-app). To learn more about React, check out the [React documentation](https://reactjs.org/) and the tutorial [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 

@@ -1,0 +1,19 @@
+.list-container {
+    display: flex;
+    height: 93%;
+    flex-direction: column;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    background: #313131;
+}
+
+.widget-container {
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    width: 100%;
+    min-height: 40px;
+    color: #FFF;
+    background: #494949;
+    cursor: pointer;
+}

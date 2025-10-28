@@ -1,6 +1,9 @@
 # Build React
-FROM node:20-bullseye-slim AS builder
+FROM node:18-bullseye-slim AS builder
 WORKDIR /app
+
+# Instalar npm v9 explicitamente para suportar lockfileVersion 3
+RUN npm install -g npm@9
 
 COPY package*.json ./
 RUN npm ci
@@ -8,8 +11,11 @@ COPY . .
 RUN npm run build
 
 # Runtime
-FROM node:20-bullseye-slim
+FROM node:18-bullseye-slim
 WORKDIR /app
+
+# Instalar npm v9 também no runtime stage
+RUN npm install -g npm@9
 
 RUN apt-get update && apt-get install -y \
     net-tools \

@@ -1,67 +1,42 @@
-# Build React
-FROM ubuntu:24.04 AS builder
+FROM ubuntu:focal
 
-ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+    # Install dependencies
+    && apt-get install -y \
+    net-tools \
+    iputils-ping \
+    iproute2 \
+    curl \
+    wget \
+    # Install NodeJS
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    # Install Application
+    && wget https://github.com/larsid/covid-monitor-proxy/archive/main.tar.gz \
+    && tar -xvzf main.tar.gz \
+    && cp -a covid-monitor-proxy-main/  app/ \
+    && rm -rf main.tar.gz \
+    && rm -rf covid-monitor-proxy-main \
+    && apt-get autoremove -y
+
+
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    curl \
-    gnupg \
-    build-essential \
-  && rm -rf /var/lib/apt/lists/*
-
-# Instalar Node.js 20.x a partir do NodeSource
-RUN mkdir -p /etc/apt/keyrings \
-  && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
-  && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list \
-  && apt-get update \
-  && apt-get install -y --no-install-recommends nodejs \
-  && rm -rf /var/lib/apt/lists/*
-
-# Garantir npm v10.8.2 no estágio de build
+# Garantir npm v10.8.2 no runtime stage
 RUN npm install -g npm@10.8.2
+
 
 COPY package*.json ./
 RUN npm ci
 COPY . .
 # React Scripts 4 usa Webpack 4, que precisa da flag legacy provider com OpenSSL 3 (Node >=17)
 ENV NODE_OPTIONS=--openssl-legacy-provider
-RUN npm run build
-ENV NODE_OPTIONS=
-
-# Runtime
-FROM ubuntu:24.04
-
-ENV DEBIAN_FRONTEND=noninteractive
-WORKDIR /app
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    curl \
-    gnupg \
-    net-tools \
-    iputils-ping \
-    iproute2 \
-    wget \
-  && rm -rf /var/lib/apt/lists/*
-
-# Instalar Node.js 20.x a partir do NodeSource
-RUN mkdir -p /etc/apt/keyrings \
-  && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
-  && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list \
-  && apt-get update \
-  && apt-get install -y --no-install-recommends nodejs \
-  && rm -rf /var/lib/apt/lists/*
-
-# Garantir npm v10.8.2 no runtime stage
-RUN npm install -g npm@10.8.2
 
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/server.js ./
 
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev 
 
 EXPOSE 80
 CMD ["node", "server.js"]

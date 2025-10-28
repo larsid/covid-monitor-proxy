@@ -26,7 +26,9 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 # React Scripts 4 usa Webpack 4, que precisa da flag legacy provider com OpenSSL 3 (Node >=17)
-RUN NODE_OPTIONS=--openssl-legacy-provider npm run build
+ENV NODE_OPTIONS=--openssl-legacy-provider
+RUN npm run build
+ENV NODE_OPTIONS=
 
 # Runtime
 FROM ubuntu:24.04

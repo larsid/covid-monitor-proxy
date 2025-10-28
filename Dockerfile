@@ -1,6 +1,10 @@
 # Build React
 FROM node:18-bullseye-slim AS builder
 WORKDIR /app
+
+# Atualizar npm para versão mais recente para suportar lockfileVersion 3
+RUN npm install -g npm@latest
+
 COPY package*.json ./
 RUN npm ci
 COPY . .
@@ -9,6 +13,10 @@ RUN npm run build
 # Runtime
 FROM node:18-bullseye-slim
 WORKDIR /app
+
+# Atualizar npm também no runtime stage
+RUN npm install -g npm@latest
+
 RUN apt-get update && apt-get install -y \
     net-tools \
     iputils-ping \
